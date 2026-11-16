@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  mentee
+  mentor
+  moderator
+  admin
+}
+
+enum AccountStatus {
+  active
+  suspended
+  deactivated
+}
+
+enum VerificationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum MatchStatus {
+  pending
+  accepted
+  declined
+  ended
+}
+
+enum ReportStatus {
+  open
+  under_review
+  resolved
+  dismissed
+}
+
+enum ResourceStatus {
+  draft
+  in_review
+  published
+  archived
+}
+
+enum Level {
+  low
+  medium
+  high
+}
+
+enum ResourceCategory {
+  breathing
+  mindfulness
+  movement
+  audio
+  routine
+  awareness
+}
+
+enum OtpPurpose {
+  verify_email
+  reset_password
+}
+
+model User {
+  user_id        Int           @id @default(autoincrement())
+  email          String        @unique
+  password_hash  String
+  display_name   String
+  role           Role          @default(mentee)
+  email_verified Boolean       @default(false)
+  account_status AccountStatus @default(active)
+  created_at     DateTime      @default(now())
+
+  mentor_profile    MentorProfile?  @relation("UserMentorProfile")
+  reviewed_mentors  MentorProfile[] @relation("MentorReviewer")
+  sent_matches      MatchRequest[]  @relation("MenteeMatches")
+  received_matches  MatchRequest[]  @relation("MentorMatches")
+  ended_matches     MatchRequest[]  @relation("MatchEnder")
+  messages          Message[]
+  filed_reports     Report[]        @relation("ReportFiler")
+  assigned_reports  Report[]        @relation("ReportModerator")
+  authored_res      Resource[]      @relation("ResourceAuthor")
+  reviewed_res      Resource[]      @relation("ResourceReviewer")
+  saved_resources   SavedResource[]
+  audit_logs        AuditLog[]
+  otp_tokens        OtpToken[]
+
+  @@map("USER")
+}
+
+model MentorProfile {
+  mentor_profile_id    Int                @id @default(autoincrement())
+  user_id              Int                @unique
+  bio                  String             @db.Text
+  expertise_summary    String             @db.Text
+  verification_status  VerificationStatus @default(pending)
+  verification_doc_key String
+  reviewed_by          Int?
+  reviewed_at          DateTime?
+
+  user     User  @relation("UserMentorProfile", fields: [user_id], references: [user_id], onDelete: Cascade)
+  reviewer User? @relation("MentorReviewer", fields: [reviewed_by], references: [user_id])
+
+  @@map("MENTOR_PROFILE")
+}
+
+model MatchRequest {
+  match_id     Int         @id @default(autoincrement())
+  mentee_id    Int
+  mentor_id    Int
+  status       MatchStatus @default(pending)
+  requested_at DateTime    @default(now())
+  responded_at DateTime?
+  ended_at     DateTime?
+  ended_by     Int?
+
+  mentee   User      @relation("MenteeMatches", fields: [mentee_id], references: [user_id])
+  mentor   User      @relation("MentorMatches", fields: [mentor_id], references: [user_id])
+  ender    User?     @relation("MatchEnder", fields: [ended_by], references: [user_id])
+  messages Message[]
+
+  @@map("MATCH_REQUEST")
+}
+
+model Message {
+  message_id Int      @id @default(autoincrement())
+  match_id   Int
+  sender_id  Int
+  content    String   @db.Text
+  sent_at    DateTime @default(now())
+  is_hidden  Boolean  @default(false)
+
+  match   MatchRequest @relation(fields: [match_id], references: [match_id], onDelete: Cascade)
+  sender  User         @relation(fields: [sender_id], references: [user_id])
+  reports Report[]
+
+  @@map("MESSAGE")
+}
+
+model Report {
+  report_id             Int          @id @default(autoincrement())
+  message_id            Int
+  reported_by           Int
+  assigned_moderator_id Int?
+  reason                String
+  status                ReportStatus @default(open)
+  created_at            DateTime     @default(now())
+  resolved_at           DateTime?
+
+  message            Message @relation(fields: [message_id], references: [message_id])
+  reporter           User    @relation("ReportFiler", fields: [reported_by], references: [user_id])
+  assigned_moderator User?   @relation("ReportModerator", fields: [assigned_moderator_id], references: [user_id])
+
+  @@map("REPORT")
+}
+
+model Resource {
+  resource_id       Int              @id @default(autoincrement())
+  created_by        Int
+  reviewed_by       Int?
+  title             String
+  body              String           @db.Text
+  time_band         String
+  energy_level      Level
+  sensory_intensity Level
+  category          ResourceCategory
+  status            ResourceStatus   @default(draft)
+  published_at      DateTime?
+
+  author   User            @relation("ResourceAuthor", fields: [created_by], references: [user_id])
+  reviewer User?           @relation("ResourceReviewer", fields: [reviewed_by], references: [user_id])
+  saved_by SavedResource[]
+
+  @@map("RESOURCE")
+}
+
+model SavedResource {
+  user_id     Int
+  resource_id Int
+  saved_at    DateTime @default(now())
+
+  user     User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  resource Resource @relation(fields: [resource_id], references: [resource_id], onDelete: Cascade)
+
+  @@id([user_id, resource_id])
+  @@map("SAVED_RESOURCE")
+}
+
+model AuditLog {
+  audit_id     Int      @id @default(autoincrement())
+  actor_id     Int
+  action       String
+  target_table String
+  target_id    Int
+  occurred_at  DateTime @default(now())
+
+  actor User @relation(fields: [actor_id], references: [user_id])
+
+  @@map("AUDIT_LOG")
+}
+
+model OtpToken {
+  otp_id     Int        @id @default(autoincrement())
+  user_id    Int
+  code_hash  String
+  purpose    OtpPurpose
+  expires_at DateTime
+  used       Boolean    @default(false)
+  created_at DateTime   @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("OTP_TOKEN")
+}

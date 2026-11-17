@@ -1,0 +1,173 @@
+openapi: 3.0.3
+info:
+  title: NeuroConnect API — Auth & Users
+  version: "1.0.0"
+  description: Authentication and user-account endpoints for NeuroConnect.
+
+servers:
+  - url: http://localhost:4000/api
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new account
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, display_name, age_confirmed]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8, maxLength: 72 }
+                display_name: { type: string, minLength: 2, maxLength: 50 }
+                role: { type: string, enum: [mentee, mentor], default: mentee }
+                age_confirmed:
+                  type: boolean
+                  enum: [true]
+                  description: User confirms they are 18 or older (must be true)
+      responses:
+        "201":
+          description: Account created. `otp_sent` is false if the email could not be sent (request a new code).
+        "400":
+          description: Validation error (including age_confirmed not true)
+        "409":
+          description: Email already registered
+        "429":
+          description: Too many requests
+
+  /auth/verify-otp:
+    post:
+      summary: Verify email with a 6-digit OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        "200":
+          description: Email verified, session cookie set
+        "400":
+          description: Invalid or expired OTP (also returned for unknown emails). A code is burned after 5 wrong attempts.
+        "429":
+          description: Too many requests
+
+  /auth/resend-otp:
+    post:
+      summary: Resend a verification OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: OTP resent if the account exists and is unverified (at most one code per 60 seconds)
+        "429":
+          description: Too many requests
+
+  /auth/login:
+    post:
+      summary: Log in with email and password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Logged in, session cookie set
+        "401":
+          description: Invalid email or password
+        "403":
+          description: >
+            Account suspended or deactivated, OR email not verified. For an unverified
+            account the body contains `code: EMAIL_NOT_VERIFIED` and a new OTP is sent.
+        "429":
+          description: Too many failed login attempts (10 per 15 minutes)
+
+  /auth/forgot-password:
+    post:
+      summary: Request a password-reset OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Reset OTP sent if an active account matches
+
+  /auth/reset-password:
+    post:
+      summary: Reset password using an OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code, new_password]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+                new_password: { type: string, minLength: 8, maxLength: 72 }
+      responses:
+        "200":
+          description: Password updated. All existing sessions for the account are invalidated.
+        "400":
+          description: Invalid reset request or OTP
+        "429":
+          description: Too many requests
+
+  /auth/logout:
+    post:
+      summary: Log out and destroy the session
+      tags: [Auth]
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      summary: Get the currently logged-in user's profile
+      tags: [Users]
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Current user object (includes mentor_profile if applicable)
+        "401":
+          description: Not authenticated
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: connect.sid

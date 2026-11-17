@@ -48,7 +48,7 @@ async function main() {
       email: 'mentor.pending@neuroconnect.local',
       password_hash: passwordHash,
       display_name: 'Bilal M.',
-      role: 'mentee',
+      role: 'mentor', // registered as a mentor; application is still pending
       email_verified: true,
       mentor_profile: {
         create: {

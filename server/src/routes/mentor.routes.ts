@@ -108,6 +108,13 @@ router.post('/connect', requireAuth, requireVerifiedEmail, async (req, res) => {
     return res.status(404).json({ error: 'Approved mentor not found' });
   }
 
+  const activeMenteeCount = await prisma.matchRequest.count({
+    where: { mentor_id: mentor_user_id, status: 'accepted' },
+  });
+  if (activeMenteeCount >= 3) {
+    return res.status(409).json({ error: 'This mentor is at full capacity' });
+  }
+
   const existingMatch = await prisma.matchRequest.findFirst({
     where: {
       mentee_id: menteeId,
@@ -153,7 +160,7 @@ router.get('/connections', requireAuth, async (req, res) => {
   res.json({ sent, received });
 });
 
-// PATCH /api/mentors/connections/:matchId/respond
+//PATCH /connections/:matchId/respond
 router.patch('/connections/:matchId/respond', requireAuth, async (req, res) => {
   const matchId = Number(req.params.matchId);
   if (Number.isNaN(matchId)) return res.status(400).json({ error: 'Invalid match ID' });
@@ -162,27 +169,23 @@ router.patch('/connections/:matchId/respond', requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
   const mentorId = req.session.userId!;
-  const match = await prisma.matchRequest.findUnique({ where: { match_id: matchId } });
 
-  if (!match || match.mentor_id !== mentorId) {
-    return res.status(404).json({ error: 'Match request not found' });
-  }
+  const result = await prisma.matchRequest.updateMany({
+    where: { match_id: matchId, mentor_id: mentorId, status: 'pending' },
+    data: { status: parsed.data.decision, responded_at: new Date() },
+  });
 
-  if (match.status !== 'pending') {
+  if (result.count === 0) {
+    const match = await prisma.matchRequest.findUnique({ where: { match_id: matchId } });
+    if (!match || match.mentor_id !== mentorId) {
+      return res.status(404).json({ error: 'Match request not found' });
+    }
     return res.status(400).json({ error: `Match request is already ${match.status}` });
   }
 
-  const updated = await prisma.matchRequest.update({
-    where: { match_id: matchId },
-    data: {
-      status: parsed.data.decision,
-      responded_at: new Date(),
-    },
-  });
-
+  const updated = await prisma.matchRequest.findUnique({ where: { match_id: matchId } });
   res.json({ message: `Match request ${parsed.data.decision}`, match: updated });
 });
-
 // GET /api/mentors/suggested
 router.get('/suggested', requireAuth, async (req, res) => {
   const menteeId = req.session.userId!;
@@ -213,15 +216,16 @@ router.get('/suggested', requireAuth, async (req, res) => {
       const activeCount = await prisma.matchRequest.count({
         where: { mentor_id: m.user_id, status: 'accepted' },
       });
-      const reason =
-        activeCount === 0 ? 'available' : activeCount <= 2 ? 'low current mentee load' : 'experienced';
+      if (activeCount >= 3) return null; // at capacity, don't suggest
+      const reason = activeCount === 0 ? 'available' : 'low current mentee load';
       return { ...m, active_mentee_count: activeCount, reason };
     })
   );
 
-  ranked.sort((a, b) => a.active_mentee_count - b.active_mentee_count);
+  const available = ranked.filter((r) => r !== null);
+  available.sort((a, b) => a.active_mentee_count - b.active_mentee_count);
 
-  res.json({ suggested: ranked });
+  res.json({ suggested: available });
 });
 
 

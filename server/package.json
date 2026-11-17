@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
@@ -38,8 +38,10 @@
     "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "prisma": "^6.19.3",
+    "supertest": "^7.3.2",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   },
   "allowScripts": {
     "@prisma/client@6.19.3": true,

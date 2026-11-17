@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: NeuroConnect API — Auth & Users
+  version: "1.0.0"
+  description: Authentication and user-account endpoints for NeuroConnect.
+
+servers:
+  - url: http://localhost:4000/api
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new account
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, display_name]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                display_name: { type: string, minLength: 2, maxLength: 50 }
+                role: { type: string, enum: [mentee, mentor], default: mentee }
+      responses:
+        "201":
+          description: Account created, OTP sent to email
+        "400":
+          description: Validation error
+        "409":
+          description: Email already registered
+
+  /auth/verify-otp:
+    post:
+      summary: Verify email with a 6-digit OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string, minLength: 6, maxLength: 6 }
+      responses:
+        "200":
+          description: Email verified, session cookie set
+        "400":
+          description: Invalid or expired OTP
+        "404":
+          description: User not found
+
+  /auth/resend-otp:
+    post:
+      summary: Resend a verification OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: OTP resent if the account exists and is unverified
+
+  /auth/login:
+    post:
+      summary: Log in with email and password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Logged in, session cookie set
+        "401":
+          description: Invalid email or password
+        "403":
+          description: Account suspended or deactivated
+
+  /auth/forgot-password:
+    post:
+      summary: Request a password-reset OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Reset OTP sent if an active account matches
+
+  /auth/reset-password:
+    post:
+      summary: Reset password using an OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code, new_password]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string, minLength: 6, maxLength: 6 }
+                new_password: { type: string, minLength: 8 }
+      responses:
+        "200":
+          description: Password updated
+        "400":
+          description: Invalid reset request or OTP
+
+  /auth/logout:
+    post:
+      summary: Log out and destroy the session
+      tags: [Auth]
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      summary: Get the currently logged-in user's profile
+      tags: [Users]
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Current user object (includes mentor_profile if applicable)
+        "401":
+          description: Not authenticated
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: connect.sid

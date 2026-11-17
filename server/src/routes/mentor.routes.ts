@@ -183,4 +183,46 @@ router.patch('/connections/:matchId/respond', requireAuth, async (req, res) => {
   res.json({ message: `Match request ${parsed.data.decision}`, match: updated });
 });
 
+// GET /api/mentors/suggested
+router.get('/suggested', requireAuth, async (req, res) => {
+  const menteeId = req.session.userId!;
+
+  const existingMatches = await prisma.matchRequest.findMany({
+    where: { mentee_id: menteeId, status: { in: ['pending', 'accepted'] } },
+    select: { mentor_id: true },
+  });
+  const excludedIds = existingMatches.map((m) => m.mentor_id);
+
+  const mentors = await prisma.mentorProfile.findMany({
+    where: {
+      verification_status: 'approved',
+      user: { account_status: 'active' },
+      user_id: { notIn: excludedIds },
+    },
+    select: {
+      mentor_profile_id: true,
+      user_id: true,
+      bio: true,
+      expertise_summary: true,
+      user: { select: { display_name: true } },
+    },
+  });
+
+  const ranked = await Promise.all(
+    mentors.map(async (m) => {
+      const activeCount = await prisma.matchRequest.count({
+        where: { mentor_id: m.user_id, status: 'accepted' },
+      });
+      const reason =
+        activeCount === 0 ? 'available' : activeCount <= 2 ? 'low current mentee load' : 'experienced';
+      return { ...m, active_mentee_count: activeCount, reason };
+    })
+  );
+
+  ranked.sort((a, b) => a.active_mentee_count - b.active_mentee_count);
+
+  res.json({ suggested: ranked });
+});
+
+
 export default router;

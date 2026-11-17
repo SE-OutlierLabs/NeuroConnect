@@ -100,7 +100,8 @@ model MentorProfile {
   bio                  String             @db.Text
   expertise_summary    String             @db.Text
   verification_status  VerificationStatus @default(pending)
-  verification_doc_key String
+  verification_doc_key String?
+  review_reason        String?              @db.Text
   reviewed_by          Int?
   reviewed_at          DateTime?
 
@@ -212,6 +213,7 @@ model OtpToken {
   purpose    OtpPurpose
   expires_at DateTime
   used       Boolean    @default(false)
+  attempts   Int        @default(0)
   created_at DateTime   @default(now())
 
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)

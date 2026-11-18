@@ -2,32 +2,40 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react
 
 export function Button({ variant = 'primary', className = '', ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' }) {
   const styles = {
-    primary: 'bg-accent text-white hover:bg-accent/90',
-    secondary: 'bg-surface text-ink border border-line hover:bg-accent-soft',
+    primary: 'bg-accent text-white shadow-sm shadow-accent/30 hover:bg-accent/90',
+    secondary: 'bg-white/60 text-ink border border-white/70 backdrop-blur hover:bg-white/90',
     danger: 'bg-danger text-white hover:bg-danger/90',
   }[variant]
-  return <button {...p} className={`rounded-md px-4 py-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed ${styles} ${className}`} />
+  return <button {...p} className={`rounded-xl px-4 py-2.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed ${styles} ${className}`} />
 }
 
 export function Input({ label, error, id, ...p }: InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string }) {
   const inputId = id ?? `f-${label.replace(/\W+/g, '-').toLowerCase()}`
   return (
     <div className="mb-4">
-      <label htmlFor={inputId} className="mb-1 block text-sm font-medium">{label}</label>
-      <input id={inputId} {...p} className="w-full rounded-md border border-line bg-surface px-3 py-2" />
+      <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium">
+        {label}
+        {p.required && <span aria-hidden="true" className="ml-0.5 text-danger">*</span>}
+      </label>
+      <input
+        id={inputId}
+        aria-invalid={error ? true : undefined}
+        {...p}
+        className="field w-full rounded-xl px-3.5 py-2.5 placeholder:text-muted/70"
+      />
       {error && <p className="mt-1 text-sm text-danger">{error}</p>}
     </div>
   )
 }
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-lg border border-line bg-surface p-5 ${className}`}>{children}</div>
+  return <div className={`glass rounded-2xl p-6 ${className}`}>{children}</div>
 }
 
 export function ErrorMessage({ error }: { error: unknown }) {
   if (!error) return null
   const text = error instanceof Error ? error.message : String(error)
-  return <p role="alert" className="mb-4 rounded-md bg-danger-soft px-3 py-2 text-sm text-danger">{text}</p>
+  return <p role="alert" className="mb-4 rounded-xl bg-danger-soft/80 px-3.5 py-2.5 text-sm text-danger">{text}</p>
 }
 
 export function Spinner({ label = 'Loading...' }: { label?: string }) {

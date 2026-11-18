@@ -15,7 +15,7 @@ export default function Layout() {
 
   return (
     <>
-      <header className="border-b border-line bg-surface">
+      <header className="glass-bar sticky top-0 z-10">
         <nav aria-label="Main" className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <Link to={user ? homeFor(user.role) : '/login'} className="text-lg font-semibold text-accent">NeuroConnect</Link>
           {linksFor(user?.role).map(([to, label]) => (

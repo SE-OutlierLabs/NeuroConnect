@@ -14,5 +14,52 @@
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-body { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-sans); line-height: 1.6; }
+body {
+  min-height: 100vh;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  /* Soft, static colour fields give the glass something to blur. No animation on purpose. */
+  background-color: var(--color-paper);
+  background-image:
+    radial-gradient(40rem 30rem at 10% 0%, rgba(44, 107, 111, 0.22), transparent 60%),
+    radial-gradient(36rem 28rem at 95% 15%, rgba(120, 150, 190, 0.20), transparent 60%),
+    radial-gradient(40rem 30rem at 50% 100%, rgba(150, 190, 170, 0.22), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Glass surfaces */
+.glass {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 32px rgba(30, 42, 50, 0.08);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+.glass-bar {
+  background: rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+/* Browsers without blur, or users who asked for less transparency: solid surfaces keep text readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .glass-bar { background: var(--color-surface); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-bar { background: var(--color-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
 :focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+
+/* Form fields: clear edge + soft lift so they stand out from the glass card */
+.field {
+  background: #ffffff;
+  border: 1px solid rgba(44, 107, 111, 0.35);
+  box-shadow: 0 1px 2px rgba(30, 42, 50, 0.06), 0 4px 12px rgba(44, 107, 111, 0.10);
+}
+.field:hover { border-color: rgba(44, 107, 111, 0.55); }
+.field:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(44, 107, 111, 0.18), 0 4px 12px rgba(44, 107, 111, 0.12);
+}
+.field[aria-invalid="true"] { border-color: var(--color-danger); }

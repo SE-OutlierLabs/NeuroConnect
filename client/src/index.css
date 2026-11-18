@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Calm, low-stimulation palette: NeuroConnect users are neurodivergent, so no bright accents or motion. */
+@theme {
+  --color-paper: #f5f8f7;
+  --color-surface: #ffffff;
+  --color-ink: #1e2a32;
+  --color-muted: #55656d;
+  --color-line: #d3dcda;
+  --color-accent: #2c6b6f;
+  --color-accent-soft: #e2eeed;
+  --color-danger: #a3372f;
+  --color-danger-soft: #f7e6e4;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+body { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-sans); line-height: 1.6; }
+:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }

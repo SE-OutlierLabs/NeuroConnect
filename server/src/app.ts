@@ -68,7 +68,7 @@ export function createApp(opts: { store?: session.Store } = {}) {
   app.use('/api/auth', authRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/mentors', mentorRoutes);
-  app.use('/api', messageRoutes);
+  //app.use('/api', messageRoutes);
   app.use('/api/mentors', uploadRoutes);
 
   app.use('/api', (_req, res) => {

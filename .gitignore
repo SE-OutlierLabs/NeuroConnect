@@ -9,3 +9,6 @@ build/
 .vscode/
 coverage/
 .vercel/
+
+server/uploads/
+cookies.txt

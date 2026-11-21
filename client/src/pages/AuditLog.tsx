@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { get } from '../api'
 import { ErrorMessage, Page, Spinner } from '../components/ui'
 
+// One audit log entry: who did what to which record.
 type Log = {
   audit_id: number
   action: string
@@ -11,10 +12,12 @@ type Log = {
   actor: { user_id: number; display_name: string; role: string }
 }
 
+// Admin page: lists the latest recorded admin actions (approvals and rejections).
 export default function AuditLog() {
   const [logs, setLogs] = useState<Log[] | null>(null)
   const [error, setError] = useState<unknown>(null)
 
+  // Load the log once when the page opens.
   useEffect(() => {
     get<{ logs: Log[] }>('/admin/audit-logs').then((d) => setLogs(d.logs)).catch(setError)
   }, [])

@@ -4,11 +4,13 @@ import { ApiError, post } from '../api'
 import { useAuth } from '../auth'
 import { Button, Card, ErrorMessage, Page } from '../components/ui'
 
+// Length limits for the two fields (the server checks them again).
 const BIO_MIN = 20
 const BIO_MAX = 2000
 const EXPERTISE_MIN = 10
 const EXPERTISE_MAX = 1000
 
+// Mentor page: apply for approval with a bio and a summary of expertise.
 export default function MentorApply() {
   const { user, refresh } = useAuth()
   const navigate = useNavigate()
@@ -19,12 +21,14 @@ export default function MentorApply() {
   const [fieldErrors, setFieldErrors] = useState<{ bio?: string; expertise?: string }>({})
   const [submitting, setSubmitting] = useState(false)
 
+  // Already applied and not rejected? Go to the status page instead of showing the form.
   useEffect(() => {
     if (profile && profile.verification_status !== 'rejected') {
       navigate('/mentor/status', { replace: true })
     }
   }, [profile, navigate])
 
+  // Client-side length checks for quick feedback.
   function validate() {
     const next: { bio?: string; expertise?: string } = {}
     if (bio.trim().length < BIO_MIN) next.bio = `Please enter at least ${BIO_MIN} characters.`
@@ -35,6 +39,7 @@ export default function MentorApply() {
     return Object.keys(next).length === 0
   }
 
+  // Send the application, reload the user so mentor_profile is available, then show the status page.
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)

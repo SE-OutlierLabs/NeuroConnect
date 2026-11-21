@@ -4,6 +4,7 @@ import { get } from '../api'
 import { Card, ErrorMessage, Page, Spinner } from '../components/ui'
 
 type Status = 'pending' | 'accepted' | 'declined'
+// A connection request the mentee has sent to a mentor.
 type Sent = {
   match_id: number
   status: Status
@@ -11,16 +12,19 @@ type Sent = {
   mentor: { user_id: number; display_name: string }
 }
 
+// Badge colours for each request status.
 const badge: Record<Status, string> = {
   pending: 'bg-white/60 text-muted border border-white/70',
   accepted: 'bg-accent text-white',
   declined: 'bg-danger-soft/80 text-danger',
 }
 
+// Mentee page: lists the connection requests they sent and their status.
 export default function Connections() {
   const [sent, setSent] = useState<Sent[] | null>(null)
   const [error, setError] = useState<unknown>(null)
 
+  // Load the sent requests once when the page opens.
   useEffect(() => {
     get<{ sent: Sent[] }>('/mentors/connections')
       .then((d) => setSent(d.sent))

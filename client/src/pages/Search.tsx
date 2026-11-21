@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ApiError, get, post } from '../api'
 import { Button, Card, ErrorMessage, Input, Page, Spinner } from '../components/ui'
 
+// A mentor as returned by GET /mentors.
 type Mentor = {
   mentor_profile_id: number
   user_id: number
@@ -9,12 +10,17 @@ type Mentor = {
   expertise_summary: string
   user: { display_name: string }
 }
+// A suggested mentor also carries their current mentee count and why they were suggested.
 type Suggested = Mentor & { active_mentee_count: number; reason: string }
+// Shape of the paged search response.
 type SearchResponse = { mentors: Mentor[]; page: number; limit: number; total: number }
+// A request this mentee has already sent (used to disable the Connect button).
 type Sent = { mentor_id: number; status: 'pending' | 'accepted' | 'declined' }
 
+// Mentors shown per page.
 const LIMIT = 10
 
+// One mentor in a list, with a Connect button that is disabled once a request is sent.
 function MentorCard({
   mentor, label, requested, connecting, note, onConnect,
 }: {
@@ -43,6 +49,7 @@ function MentorCard({
   )
 }
 
+// Mentee page: search approved mentors, see suggestions and send connection requests.
 export default function Search() {
   const [q, setQ] = useState('')
   const [query, setQuery] = useState('')
@@ -84,6 +91,7 @@ export default function Search() {
       .catch(() => {})
   }, [])
 
+  // Send a connection request; if it fails (for example the mentor is full) show the message under the card.
   async function connect(mentorId: number) {
     setConnecting(mentorId)
     setNotes((n) => ({ ...n, [mentorId]: '' }))
@@ -101,6 +109,7 @@ export default function Search() {
     }
   }
 
+  // Number of pages for the pager.
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1
   const reasonLabel = (r: string) => (r === 'available' ? 'Available now' : 'Low current mentee load')
 

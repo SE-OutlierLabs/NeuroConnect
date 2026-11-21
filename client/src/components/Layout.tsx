@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth, homeFor } from '../auth'
 
+// Navbar links for each role.
 const linksFor = (role?: string): [string, string][] => {
   if (role === 'mentee') return [['/search', 'Find a mentor'], ['/connections', 'My connections']]
   if (role === 'mentor') return [['/inbox', 'Requests'], ['/mentor/status', 'My application']]
@@ -9,6 +10,7 @@ const linksFor = (role?: string): [string, string][] => {
   return []
 }
 
+// Page frame: navbar on top, then the current page (<Outlet />).
 export default function Layout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -18,12 +20,14 @@ export default function Layout() {
       <header className="glass-bar sticky top-0 z-10">
         <nav aria-label="Main" className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <Link to={user ? homeFor(user.role) : '/login'} className="text-lg font-semibold text-accent">NeuroConnect</Link>
+          {/* Links depend on the logged-in role */}
           {linksFor(user?.role).map(([to, label]) => (
             <NavLink key={to} to={to} className={({ isActive }) => (isActive ? 'font-medium text-accent underline underline-offset-4' : 'text-muted hover:text-ink')}>
               {label}
             </NavLink>
           ))}
           <span className="ml-auto flex items-center gap-4 text-sm">
+            {/* Logged in: show the name and Log out. Logged out: show Log in and Register. */}
             {user ? (
               <>
                 <span className="text-muted">{user.display_name}</span>

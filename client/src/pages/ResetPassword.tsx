@@ -4,8 +4,10 @@ import { post } from '../api'
 import { homeFor, useAuth } from '../auth'
 import { Button, Card, ErrorMessage, Input, Spinner } from '../components/ui'
 
+// Error text for each field of the form.
 type Errors = Partial<Record<'email' | 'code' | 'password' | 'confirm', string>>
 
+// Reset page: enter the emailed code and a new password.
 export default function ResetPassword() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
@@ -24,6 +26,7 @@ export default function ResetPassword() {
   if (loading) return <Spinner />
   if (user) return <Navigate to={homeFor(user.role)} replace />
 
+  // Client-side checks for quick feedback (the server validates again).
   function validate(): Errors {
     const e: Errors = {}
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) e.email = 'Enter a valid email address.'
@@ -34,6 +37,7 @@ export default function ResetPassword() {
     return e
   }
 
+  // Send the code and the new password to the server.
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault()
     setError(null)
@@ -53,6 +57,7 @@ export default function ResetPassword() {
     }
   }
 
+  // Switch between hidden and visible password fields.
   const type = show ? 'text' : 'password'
 
   return (

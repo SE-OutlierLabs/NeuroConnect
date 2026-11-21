@@ -4,14 +4,17 @@ import { post } from '../api'
 import { homeFor, useAuth } from '../auth'
 import { Button, Card, ErrorMessage, Input, Spinner } from '../components/ui'
 
+// Roles a person can choose when registering.
 type Role = 'mentee' | 'mentor'
 type Errors = Partial<Record<'name' | 'email' | 'password' | 'confirm' | 'age', string>>
 
+// Options shown in the role picker.
 const ROLES: { value: Role; title: string; text: string }[] = [
   { value: 'mentee', title: 'I want a mentor', text: 'Search for approved mentors and send connection requests.' },
   { value: 'mentor', title: 'I want to mentor', text: 'Apply to become a mentor. An admin reviews every application.' },
 ]
 
+// Register page: validates the form, creates the account, then moves to email verification.
 export default function Register() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
@@ -30,6 +33,7 @@ export default function Register() {
   if (loading) return <Spinner />
   if (user) return <Navigate to={homeFor(user.role)} replace />
 
+  // Client-side checks for quick feedback (the server validates again).
   function validate(): Errors {
     const e: Errors = {}
     const n = name.trim()
@@ -42,6 +46,7 @@ export default function Register() {
     return e
   }
 
+  // Create the account; the server emails a 6-digit code, so go to the OTP page next.
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault()
     setError(null)
@@ -74,6 +79,7 @@ export default function Register() {
     }
   }
 
+  // Switch between hidden and visible password fields.
   const type = show ? 'text' : 'password'
 
   return (
@@ -85,6 +91,7 @@ export default function Register() {
         <form onSubmit={onSubmit} noValidate>
           <ErrorMessage error={error} />
 
+          {/* Role choice: mentee or mentor */}
           <fieldset className="mb-5">
             <legend className="mb-1.5 text-sm font-medium">
               I am joining as<span aria-hidden="true" className="ml-0.5 text-danger">*</span>
@@ -120,6 +127,7 @@ export default function Register() {
             Show passwords
           </label>
 
+          {/* 18+ confirmation (the server requires age_confirmed) */}
           <div className="mb-6">
             <label className="flex items-start gap-2.5 text-sm">
               <input

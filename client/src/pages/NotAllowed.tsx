@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Page } from '../components/ui'
 
+// Shown when a logged-in user opens a page their role cannot use.
 export default function NotAllowed() {
   return (
     <Page title="You can't open this page">

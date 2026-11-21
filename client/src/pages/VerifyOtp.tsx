@@ -6,6 +6,7 @@ import { Button, Card, ErrorMessage, Input, Spinner } from '../components/ui'
 
 const COOLDOWN_SECONDS = 60 // the server allows one new code per 60 seconds
 
+// OTP page: enter the 6-digit code emailed after registering (or after logging in with an unverified email).
 export default function VerifyOtp() {
   const { user, loading, refresh } = useAuth()
   const navigate = useNavigate()
@@ -21,6 +22,7 @@ export default function VerifyOtp() {
   // A code was just sent when the user arrives here (register or login), so the cooldown starts now.
   const [cooldown, setCooldown] = useState(state?.email ? COOLDOWN_SECONDS : 0)
 
+  // Count the resend cooldown down once per second.
   useEffect(() => {
     if (cooldown <= 0) return
     const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
@@ -30,9 +32,11 @@ export default function VerifyOtp() {
   if (loading) return <Spinner />
   if (user) return <Navigate to={homeFor(user.role)} replace />
 
+  // If the user arrived without an email (for example after a page refresh), they type it in themselves.
   const hasEmail = Boolean(state?.email)
   const cleanEmail = email.trim().toLowerCase()
 
+  // Check the code; the server logs the user in when it is correct.
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
@@ -50,6 +54,7 @@ export default function VerifyOtp() {
     }
   }
 
+  // Ask for a new code (the server allows one per minute).
   async function onResend() {
     setError(null)
     setInfo(null)
@@ -66,6 +71,7 @@ export default function VerifyOtp() {
     }
   }
 
+  // Submit is enabled only for a 6-digit code and a valid email.
   const canSubmit = code.length === 6 && /^\S+@\S+\.\S+$/.test(cleanEmail) && !submitting
 
   return (

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Page } from '../components/ui'
 
+// Shown for any address that does not exist.
 export default function NotFound() {
   return (
     <Page title="Page not found">

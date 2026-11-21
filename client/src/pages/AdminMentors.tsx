@@ -4,6 +4,7 @@ import { useAuth } from '../auth'
 import { Button, Card, ErrorMessage, Page, Spinner } from '../components/ui'
 
 type Status = 'pending' | 'approved' | 'rejected'
+// A mentor application as returned by GET /admin/mentors.
 type Application = {
   mentor_profile_id: number
   user_id: number
@@ -16,12 +17,14 @@ type Application = {
   reviewer?: { user_id: number; display_name: string } | null
 }
 
+// Filter tabs: show applications by status.
 const tabs: Array<{ value: Status; label: string }> = [
   { value: 'pending', label: 'Pending' },
   { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
 ]
 
+// Admin page: review mentor applications and approve or reject them.
 export default function AdminMentors() {
   const { user } = useAuth()
   const [status, setStatus] = useState<Status>('pending')
@@ -33,6 +36,7 @@ export default function AdminMentors() {
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState('')
 
+  // Load the applications for the selected status tab.
   const loadApplications = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -46,8 +50,10 @@ export default function AdminMentors() {
     }
   }, [status])
 
+  // Reload whenever the selected tab changes.
   useEffect(() => { void loadApplications() }, [loadApplications])
 
+  // Approve an application (no reason needed).
   async function approve(application: Application) {
     setBusyId(application.mentor_profile_id)
     setError(null)
@@ -61,12 +67,14 @@ export default function AdminMentors() {
     }
   }
 
+  // Open the rejection form for one application.
   function openReject(application: Application) {
     setReviewTarget(application)
     setReason('')
     setReasonError('')
   }
 
+  // Reject needs a reason (at least 3 characters), which the mentor will see.
   async function reject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmed = reason.trim()
@@ -105,6 +113,7 @@ export default function AdminMentors() {
         <Card><p className="text-center text-muted">There are no {status} applications.</p></Card>
       )}
       {!loading && applications.map((application) => {
+        // An admin cannot review their own application, so its buttons are replaced (the server refuses it too).
         const isOwn = application.user_id === user?.user_id
         const isPending = application.verification_status === 'pending'
         return (

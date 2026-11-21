@@ -4,6 +4,7 @@ import { post } from '../api'
 import { homeFor, useAuth } from '../auth'
 import { Button, Card, ErrorMessage, Input, Spinner } from '../components/ui'
 
+// Forgot password page: asks for the email and sends a 6-digit reset code.
 export default function ForgotPassword() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function ForgotPassword() {
   const cleanEmail = email.trim().toLowerCase()
   const validEmail = /^\S+@\S+\.\S+$/.test(cleanEmail)
 
+  // Request the code, then go to the reset page.
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)

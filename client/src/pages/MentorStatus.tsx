@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { Button, Card, Page } from '../components/ui'
 
+// Mentor page: shows whether the application is pending, approved or rejected (and why).
 export default function MentorStatus() {
   const { user, loading, refresh } = useAuth()
   if (loading) return <Page title="My application"><p role="status" className="py-8 text-center text-muted">Loading your application...</p></Page>
 
+  // The mentor profile comes with the logged-in user (GET /auth/me).
   const profile = user?.mentor_profile
   if (!profile) {
     return (
@@ -19,6 +21,7 @@ export default function MentorStatus() {
     )
   }
 
+  // Message and colours for each status.
   const statusContent = {
     pending: {
       title: 'Your application is being reviewed',

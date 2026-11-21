@@ -4,10 +4,12 @@ import { ApiError } from '../api'
 import { homeFor, useAuth } from '../auth'
 import { Button, Card, ErrorMessage, Input, Spinner } from '../components/ui'
 
+// Login page: signs the user in and sends them to the home page for their role.
 export default function Login() {
   const { user, loading, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  // The page the user tried to open before being sent here, so we can return them to it.
   const from = (location.state as { from?: string } | null)?.from
 
   const [email, setEmail] = useState('')
@@ -19,6 +21,7 @@ export default function Login() {
   // Already logged in: go straight to this role's home page.
   if (user) return <Navigate to={homeFor(user.role)} replace />
 
+  // Log in, then go back to the previous page or the role's home page.
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)

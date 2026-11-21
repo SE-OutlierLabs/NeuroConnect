@@ -165,6 +165,39 @@ paths:
         "401":
           description: Not authenticated
 
+  /mentors/upload:
+    post:
+      summary: Upload a mentor verification document
+      tags: [Mentors]
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: File stored. Returns a key to pass as `verification_doc_key` on POST /mentors/apply.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    example: verification/9/1700000000-doc.pdf
+        "400":
+          description: No file, wrong MIME type, or file too large
+        "401":
+          description: Not authenticated
+
 components:
   securitySchemes:
     sessionCookie:
